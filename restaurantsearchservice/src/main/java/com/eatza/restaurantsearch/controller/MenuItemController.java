@@ -36,15 +36,14 @@ public class MenuItemController {
 	IKafkaConsumer kafkaConsumer;
 	private static final Logger logger = LoggerFactory.getLogger(MenuItemController.class);
 
-	@GetMapping("/message")
-	public ResponseEntity<String> getKafkaMessage(@RequestBody String messageString) throws IOException
-	{
-		return ResponseEntity
-				.status(HttpStatus.OK)
-				.body(kafkaConsumer.consume(messageString));
-
-	}
-
+	/*
+	 * @GetMapping("/message") public ResponseEntity<String> getKafkaMessage()
+	 * throws IOException { String messageString = null;
+	 * System.out.println("kafka message at restaurant"); return ResponseEntity
+	 * .status(HttpStatus.OK) .body(kafkaConsumer.consume(messageString));
+	 * 
+	 * }
+	 */
 	@PostMapping("/item")
 	public ResponseEntity<String> addItemsToRestaurantMenu(@RequestHeader String authorization,@RequestBody ItemRequestDto itemRequestDto){
 

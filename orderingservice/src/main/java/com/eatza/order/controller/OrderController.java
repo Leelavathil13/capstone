@@ -39,11 +39,11 @@ public class OrderController {
 	public String producer(@RequestParam("message") String message) {
 		kafkaSender.send(message);
 
-		return "Message sent to the Kafka Topic java_in_use_topic Successfully";
+		return "Message sent to the Kafka Topic Message_test Successfully";
 	}
 
 	@PostMapping("/order")
-	public ResponseEntity<Order> placeOrder(@RequestHeader(required=false) String authorization, @RequestBody OrderRequestDto orderRequestDto) throws OrderException{
+	public ResponseEntity<Order> placeOrder( @RequestBody OrderRequestDto orderRequestDto) throws OrderException{
 		logger.debug("In place order method, calling the service");
 		Order order = orderService.placeOrder(orderRequestDto);
 		logger.debug("Order Placed Successfully");
@@ -53,7 +53,7 @@ public class OrderController {
 
 	}
 	@PutMapping("/order/cancel/{orderId}")
-	public ResponseEntity<String> cancel(@RequestHeader(required=false)  String authorization, @PathVariable Long orderId) throws OrderException{
+	public ResponseEntity<String> cancel( @PathVariable Long orderId) throws OrderException{
 		logger.debug("In cancel order method");
 		boolean result =orderService.cancelOrder(orderId);
 		if(result) {
@@ -68,7 +68,7 @@ public class OrderController {
 	}
 
 	@PutMapping("/order")
-	public ResponseEntity<OrderUpdateResponseDto> updateOrder(@RequestHeader(required=false)  String authorization, @RequestBody OrderUpdateDto orderUpdateDto) throws OrderException{
+	public ResponseEntity<OrderUpdateResponseDto> updateOrder( @RequestBody OrderUpdateDto orderUpdateDto) throws OrderException{
 
 		logger.debug(" In updateOrder method, calling service");
 		OrderUpdateResponseDto updatedResponse = orderService.updateOrder(orderUpdateDto);
@@ -82,7 +82,7 @@ public class OrderController {
 	}
 
 	@GetMapping("/order/{orderId}")
-	public ResponseEntity<Order> getOrderById(@RequestHeader(required=false) String authorization, @PathVariable Long orderId) throws OrderException{
+	public ResponseEntity<Order> getOrderById( @PathVariable Long orderId) throws OrderException{
 		logger.debug("In get order by id method, calling service to get Order by ID");
 		Optional<Order> order = orderService.getOrderById(orderId);
 		if(order.isPresent()) {
@@ -98,7 +98,7 @@ public class OrderController {
 	}
 
 	@GetMapping("/order/value/{orderId}")
-	public ResponseEntity<Double> getOrderAmountByOrderId(@RequestHeader(required=false)  String authorization, @PathVariable Long orderId) throws OrderException{
+	public ResponseEntity<Double> getOrderAmountByOrderId( @PathVariable Long orderId) throws OrderException{
 		logger.debug("In get order value by id method, calling service to get Order value");
 		double price = orderService.getOrderAmountByOrderId(orderId);
 
