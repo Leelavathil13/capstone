@@ -31,13 +31,12 @@ import com.eatza.restaurantsearch.model.MenuItem;
 import com.eatza.restaurantsearch.service.menuitemservice.MenuItemService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-//import io.jsonwebtoken.Jwts;
-//import io.jsonwebtoken.SignatureAlgorithm;
 
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(value= MenuItemController.class)
 public class MenuItemControllerTest {
+
 	@Autowired
 	private MockMvc mockMvc;
 
@@ -124,6 +123,7 @@ public class MenuItemControllerTest {
 		
 		.andReturn();
 	}
+
 
 
 }

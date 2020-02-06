@@ -18,6 +18,7 @@ import com.eatza.order.dto.OrderRequestDto;
 import com.eatza.order.dto.OrderUpdateDto;
 import com.eatza.order.dto.OrderUpdateResponseDto;
 import com.eatza.order.exception.OrderException;
+import com.eatza.order.model.Message;
 import com.eatza.order.model.Order;
 import com.eatza.order.service.kafka.KafkaSender;
 import com.eatza.order.service.orderservice.OrderService;
@@ -35,11 +36,17 @@ public class OrderController {
 	@Autowired
 	KafkaSender kafkaSender;
 
-	@GetMapping(value = "/producer")
-	public String producer(@RequestParam("message") String message) {
-		kafkaSender.send(message);
-
-		return "Message sent to the Kafka Topic Message_test Successfully";
+	/*
+	 * @GetMapping(value = "/producer") public String
+	 * producer(@RequestParam("message") String message) {
+	 * kafkaSender.send(message);
+	 * 
+	 * return "Message sent to the Kafka Topic Message_test Successfully"; }
+	 */
+	@PostMapping("/produce")
+	public void send(@RequestBody Message msg) {
+		
+		kafkaSender.sendMessage(msg);
 	}
 
 	@PostMapping("/order")

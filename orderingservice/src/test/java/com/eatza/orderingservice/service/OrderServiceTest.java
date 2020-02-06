@@ -17,11 +17,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
+
 
 import com.eatza.order.dto.ItemFetchDto;
 import com.eatza.order.dto.MenuFetchDto;
@@ -31,6 +29,7 @@ import com.eatza.order.dto.OrderUpdateResponseDto;
 import com.eatza.order.dto.OrderedItemsDto;
 import com.eatza.order.dto.RestaurantFetchDto;
 import com.eatza.order.exception.OrderException;
+import com.eatza.order.feignclient.MyFeignClient;
 import com.eatza.order.model.Order;
 import com.eatza.order.model.OrderedItem;
 import com.eatza.order.repository.OrderRepository;
@@ -51,16 +50,16 @@ public class OrderServiceTest {
 	private ItemServiceImpl itemService;
 
 	@Mock
-	private RestTemplate restTemplate;
+	private MyFeignClient fiegnClient;
 
-
+	@Mock
+	OrderedItemsDto orderedItemsDto;
 
 	@Test
 	public void placeOrder_basic() throws OrderException {
 		OrderedItemsDto orderedItemsDto = new OrderedItemsDto(1L, 0);
 		orderedItemsDto.setItemId(1L);
 		orderedItemsDto.setQuantity(1);
-
 
 		OrderRequestDto orderRequest = new OrderRequestDto();
 		orderRequest.setCustomerId(1L);
@@ -73,7 +72,7 @@ public class OrderServiceTest {
 		restaurant.setId(1L);
 		restaurant.setName("Vasudev");
 		restaurant.setLocation("RR Nagar");
-		
+
 		MenuFetchDto menu = new MenuFetchDto();
 		menu.setId(1L);
 		menu.setActiveFrom("10");
@@ -86,11 +85,11 @@ public class OrderServiceTest {
 		item.setName("Onion Dosa");
 		item.setPrice(110);
 
-
 		when(orderRepository.save(any(Order.class)))
-		.thenReturn(new Order(orderRequest.getCustomerId(), "CREATED", orderRequest.getRestaurantId()));
+				.thenReturn(new Order(orderRequest.getCustomerId(), "CREATED", orderRequest.getRestaurantId()));
 
-		when(restTemplate.getForObject(any(String.class),any(Class.class))).thenReturn(item);
+		when(fiegnClient.feignclientResponse(anyLong())).thenReturn(item);
+		// getForObject(any(String.class),any(Class.class))).thenReturn(item);
 		when(itemService.saveItem(any(OrderedItem.class))).thenReturn(new OrderedItem());
 
 		Order order = orderService.placeOrder(orderRequest);
@@ -98,12 +97,11 @@ public class OrderServiceTest {
 
 	}
 
-	@Test(expected=OrderException.class)
+	@Test(expected = OrderException.class)
 	public void placeOrder_different_restaurant() throws OrderException {
 		OrderedItemsDto orderedItemsDto = new OrderedItemsDto(1L, 0);
 		orderedItemsDto.setItemId(1L);
 		orderedItemsDto.setQuantity(1);
-
 
 		OrderRequestDto orderRequest = new OrderRequestDto();
 		orderRequest.setCustomerId(1L);
@@ -113,24 +111,22 @@ public class OrderServiceTest {
 		MenuFetchDto menu = new MenuFetchDto(1L, "10", "22", restaurant);
 		ItemFetchDto item = new ItemFetchDto(1L, "Onion Dosa", "Dosa", 110, menu);
 
-
 		when(orderRepository.save(any(Order.class)))
-		.thenReturn(new Order(orderRequest.getCustomerId(), "CREATED", orderRequest.getRestaurantId()));
+				.thenReturn(new Order(orderRequest.getCustomerId(), "CREATED", orderRequest.getRestaurantId()));
 
-		when(restTemplate.getForObject(any(String.class),any(Class.class))).thenReturn(item);
-		//		when(itemService.saveItem(any(OrderedItem.class))).thenReturn(new OrderedItem());
+		when(fiegnClient.feignclientResponse(anyLong())).thenReturn(item);
 
 		Order order = orderService.placeOrder(orderRequest);
 		assertNotNull(order);
 
 	}
-	@Test(expected=OrderException.class)
+
+	@Test(expected = OrderException.class)
 	public void placeOrder_no_item() throws OrderException {
 		OrderedItemsDto orderedItemsDto = new OrderedItemsDto(1L, 0);
 		orderedItemsDto.setItemId(1L);
 		orderedItemsDto.setQuantity(1);
 
-
 		OrderRequestDto orderRequest = new OrderRequestDto();
 		orderRequest.setCustomerId(1L);
 		orderRequest.setRestaurantId(1L);
@@ -139,24 +135,21 @@ public class OrderServiceTest {
 		MenuFetchDto menu = new MenuFetchDto(1L, "10", "22", restaurant);
 		ItemFetchDto item = new ItemFetchDto(1L, "Onion Dosa", "Dosa", 110, menu);
 
-
 		when(orderRepository.save(any(Order.class)))
-		.thenReturn(new Order(orderRequest.getCustomerId(), "CREATED", orderRequest.getRestaurantId()));
+				.thenReturn(new Order(orderRequest.getCustomerId(), "CREATED", orderRequest.getRestaurantId()));
 
-		when(restTemplate.getForObject(any(String.class),any(Class.class))).thenReturn(null);
-		//		when(itemService.saveItem(any(OrderedItem.class))).thenReturn(new OrderedItem());
+		when(fiegnClient.feignclientResponse(anyLong())).thenReturn(null);
 
 		Order order = orderService.placeOrder(orderRequest);
 		assertNotNull(order);
 
 	}
 
-	@Test(expected=OrderException.class)
+	@Test(expected = OrderException.class)
 	public void placeOrder_quantity_zero() throws OrderException {
 		OrderedItemsDto orderedItemsDto = new OrderedItemsDto(1L, 0);
 		orderedItemsDto.setItemId(1L);
 		orderedItemsDto.setQuantity(0);
-
 
 		OrderRequestDto orderRequest = new OrderRequestDto();
 		orderRequest.setCustomerId(1L);
@@ -166,12 +159,10 @@ public class OrderServiceTest {
 		MenuFetchDto menu = new MenuFetchDto(1L, "10", "22", restaurant);
 		ItemFetchDto item = new ItemFetchDto(1L, "Onion Dosa", "Dosa", 110, menu);
 
-
 		when(orderRepository.save(any(Order.class)))
-		.thenReturn(new Order(orderRequest.getCustomerId(), "CREATED", orderRequest.getRestaurantId()));
+				.thenReturn(new Order(orderRequest.getCustomerId(), "CREATED", orderRequest.getRestaurantId()));
 
-		when(restTemplate.getForObject(any(String.class),any(Class.class))).thenReturn(item);
-		//		when(itemService.saveItem(any(OrderedItem.class))).thenReturn(new OrderedItem());
+		when(fiegnClient.feignclientResponse(anyLong())).thenReturn(item);
 		Order order = orderService.placeOrder(orderRequest);
 		assertNotNull(order);
 
@@ -186,7 +177,7 @@ public class OrderServiceTest {
 		placedOrder.setStatus("CANCELLED");
 		when(orderRepository.findById(anyLong())).thenReturn(order);
 		when(orderRepository.save(any(Order.class))).thenReturn(placedOrder);
-		Boolean isCancelled=orderService.cancelOrder(1L);
+		Boolean isCancelled = orderService.cancelOrder(1L);
 		assertTrue(isCancelled);
 		assertEquals("CANCELLED", placedOrder.getStatus());
 
@@ -197,9 +188,8 @@ public class OrderServiceTest {
 		Optional<Order> order = Optional.empty();
 		when(orderRepository.findById(anyLong())).thenReturn(order);
 
-		//		when(orderRepository.save(any(Order.class))).thenReturn(placedOrder);
-		Boolean isCancelled=orderService.cancelOrder(1L);
-		assertFalse(isCancelled);	
+		Boolean isCancelled = orderService.cancelOrder(1L);
+		assertFalse(isCancelled);
 	}
 
 	@Test
@@ -213,7 +203,7 @@ public class OrderServiceTest {
 	@Test
 	public void getOrderAmountByOrderId() {
 		Optional<Order> order = Optional.of(new Order(1L, "CREATED", 2L));
-		List<OrderedItem> itemsOrdered= new ArrayList<OrderedItem>();
+		List<OrderedItem> itemsOrdered = new ArrayList<OrderedItem>();
 		OrderedItem orderedItem1 = new OrderedItem("Dosa", 2, 100, order.get(), 1L);
 		OrderedItem orderedItem2 = new OrderedItem("Idly", 2, 50, order.get(), 2L);
 		itemsOrdered.add(orderedItem1);
@@ -227,11 +217,11 @@ public class OrderServiceTest {
 	@Test
 	public void getOrderAmountByOrderId_zero() {
 		Optional<Order> order = Optional.empty();
-		List<OrderedItem> itemsOrdered= new ArrayList<OrderedItem>();
+		List<OrderedItem> itemsOrdered = new ArrayList<OrderedItem>();
 		itemsOrdered.add(new OrderedItem());
 
 		when(orderRepository.findById(anyLong())).thenReturn(order);
-		//		when(itemService.findbyOrderId(anyLong())).thenReturn(itemsOrdered);
+
 		double totalAmount = orderService.getOrderAmountByOrderId(1L);
 		assertEquals(0, totalAmount, 0.0);
 	}
@@ -246,8 +236,8 @@ public class OrderServiceTest {
 		dto.setOrderId(1L);
 		dto.setRestaurantId(1L);
 		dto.setStatus("UPDATED");
-		 orderService.updateOrder(new OrderUpdateDto(1L, 1L, Arrays.asList(new OrderedItemsDto(1L,2)), 1L));
-		
+		orderService.updateOrder(new OrderUpdateDto(1L, 1L, Arrays.asList(new OrderedItemsDto(1L, 2)), 1L));
+
 	}
 
 	@Test(expected = OrderException.class)
@@ -260,7 +250,7 @@ public class OrderServiceTest {
 		MenuFetchDto menu = new MenuFetchDto(1L, "10", "22", restaurant);
 		ItemFetchDto item = new ItemFetchDto(1L, "Onion Dosa", "Dosa", 110, menu);
 
-		when(restTemplate.getForObject(any(String.class),any(Class.class))).thenReturn(item);
+		when(fiegnClient.feignclientResponse(anyLong())).thenReturn(item);
 		orderService.updateOrder(new OrderUpdateDto(1L, 1L, Arrays.asList(new OrderedItemsDto(1L, 0)), 1L));
 
 	}
@@ -288,7 +278,7 @@ public class OrderServiceTest {
 		MenuFetchDto menu = new MenuFetchDto(1L, "10", "22", restaurant);
 		ItemFetchDto item = new ItemFetchDto(1L, "Onion Dosa", "Dosa", 110, menu);
 
-		when(restTemplate.getForObject(any(String.class),any(Class.class))).thenReturn(item);
+		when(fiegnClient.feignclientResponse(anyLong())).thenReturn(item);
 		orderService.updateOrder(new OrderUpdateDto(1L, 1L, Arrays.asList(new OrderedItemsDto(1L, 1)), 1L));
 
 	}
@@ -300,20 +290,20 @@ public class OrderServiceTest {
 		Optional<Order> order = Optional.of(new Order(1L, "CREATED", 1L));
 
 		when(orderRepository.findById(anyLong())).thenReturn(order);
-
 		RestaurantFetchDto restaurant = new RestaurantFetchDto(1L, "Vasudev", "RR Nagar", "South Indian", 400, 4.2);
 		MenuFetchDto menu = new MenuFetchDto(1L, "10", "22", restaurant);
 		ItemFetchDto item = new ItemFetchDto(1L, "Onion Dosa", "Dosa", 110, menu);
-
-		when(restTemplate.getForObject(any(String.class),any(Class.class))).thenReturn(item);
-		when( itemService.saveItem(any(OrderedItem.class))).thenReturn(new OrderedItem("Onion Dosa", 1, 110, orderReturned, 1L));
+		when(fiegnClient.feignclientResponse(anyLong())).thenReturn(item);
+		when(itemService.saveItem(any(OrderedItem.class)))
+				.thenReturn(new OrderedItem("Onion Dosa", 1, 110, orderReturned, 1L));
 		when(orderRepository.save(any(Order.class))).thenReturn(orderReturned);
-	
-		OrderUpdateResponseDto response = orderService.updateOrder(new OrderUpdateDto(1L,1L,Arrays.asList(new OrderedItemsDto(1L, 1)),1L));
+
+		OrderUpdateResponseDto response = orderService
+				.updateOrder(new OrderUpdateDto(1L, 1L, Arrays.asList(new OrderedItemsDto(1L, 1)), 1L));
 		assertEquals("UPDATED", response.getStatus());
 	}
-	
-	@Test(expected=OrderException.class)
+
+	@Test(expected = OrderException.class)
 	public void updateOrder_serviceunavailable() throws OrderException {
 		Order orderReturned = new Order(1L, "UPDATED", 1L);
 		orderReturned.setId(1L);
@@ -323,10 +313,11 @@ public class OrderServiceTest {
 
 		RestaurantFetchDto restaurant = new RestaurantFetchDto(1L, "Vasudev", "RR Nagar", "South Indian", 400, 4.2);
 		MenuFetchDto menu = new MenuFetchDto(1L, "10", "22", restaurant);
-		OrderUpdateResponseDto response = orderService.updateOrder(new OrderUpdateDto(1L,1L,Arrays.asList(new OrderedItemsDto(1L, 1)),1L));
+		OrderUpdateResponseDto response = orderService
+				.updateOrder(new OrderUpdateDto(1L, 1L, Arrays.asList(new OrderedItemsDto(1L, 1)), 1L));
 		assertEquals("UPDATED", response.getStatus());
 	}
-	
+
 	@Test(expected = OrderException.class)
 	public void updateOrder_restaurantDifferent() throws OrderException {
 		Optional<Order> order = Optional.of(new Order(1L, "CREATED", 1L));
@@ -337,7 +328,6 @@ public class OrderServiceTest {
 		MenuFetchDto menu = new MenuFetchDto(1L, "10", "22", restaurant);
 		ItemFetchDto item = new ItemFetchDto(1L, "Onion Dosa", "Dosa", 110, menu);
 
-//		when(restTemplate.getForObject(any(String.class),any(Class.class))).thenReturn(item);
 		orderService.updateOrder(new OrderUpdateDto(1L, 2L, Arrays.asList(new OrderedItemsDto(1L, 1)), 1L));
 	}
 }
